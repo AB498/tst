@@ -35,6 +35,29 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 # Determine if running on Railway
 ON_RAILWAY = os.environ.get('RAILWAY', False)
 
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-81178.up.railway.app',
+    'https://*.up.railway.app',
+    'http://localhost:8000',
+]
+
+# Add Railway domain to CSRF trusted origins if available
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+if RAILWAY_PUBLIC_DOMAIN and RAILWAY_PUBLIC_DOMAIN not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')
+
+# Security settings
+if ON_RAILWAY:
+    # Use secure cookies in production
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Disable SSL redirect for now to avoid redirect loops
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
 
 # Application definition
 
