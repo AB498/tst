@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.title }} - Task Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">{{ task.title }}</h1>
+            <p class="text-gray-600">Task for {{ task.wedding.title }}</p>
+        </div>
+
+        <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+            {% if user.profile.role != 'guest' %}
+                <a href="{% url 'task_edit' task.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    <i class="fas fa-edit mr-2"></i> Edit
+                </a>
+                <a href="{% url 'task_delete' task.id %}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <i class="fas fa-trash mr-2"></i> Delete
+                </a>
+                {% if task.status != 'completed' %}
+                    <a href="{% url 'task_complete' task.id %}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-check-circle mr-2"></i> Complete
+                    </a>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'task_list' %}{% if task.wedding %}?wedding={{ task.wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-arrow-left mr-2"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Task Information Card -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Task Information</h2>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="flex flex-wrap gap-3">
+                    <span class="px-3 py-1 text-xs font-medium rounded-full
+                        {% if task.status == 'pending' %}bg-gray-200 text-gray-800
+                        {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                        {% elif task.status == 'completed' %}bg-green-100 text-green-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ task.get_status_display }}
+                    </span>
+                    <span class="px-3 py-1 text-xs font-medium rounded-full
+                        {% if task.priority == 'low' %}bg-gray-100 text-gray-800
+                        {% elif task.priority == 'medium' %}bg-blue-100 text-blue-800
+                        {% elif task.priority == 'high' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ task.get_priority_display }}
+                    </span>
+                    {% if task.is_overdue %}
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                            Overdue
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if task.description %}
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-700">{{ task.description }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">Due Date</h3>
+                        <p class="text-gray-900">{{ task.due_date|date:"F d, Y" }}</p>
+                    </div>
+
+                    {% if task.task_time %}
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">Task Time</h3>
+                        <p class="text-gray-900">{{ task.task_time|time:"g:i A" }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">Created By</h3>
+                        <p class="text-gray-900">{{ task.created_by.get_full_name|default:task.created_by.username }}</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">Assigned To</h3>
+                        <p class="text-gray-900">{{ task.assigned_to.get_full_name|default:task.assigned_to.username|default:"Not assigned" }}</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">Created On</h3>
+                        <p class="text-gray-900">{{ task.created_at|date:"F d, Y" }}</p>
+                    </div>
+
+                    {% if task.is_completed %}
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">Completed On</h3>
+                            <p class="text-gray-900">{{ task.completion_date|date:"F d, Y" }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Timeline Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Timeline</h2>
+            </div>
+
+            <div class="p-6">
+                <div class="relative">
+                    <!-- Vertical line -->
+                    <div class="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+                    <div class="space-y-6">
+                        {% if task.is_completed %}
+                            <div class="relative flex items-start">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center z-10">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">Task Completed</div>
+                                    <div class="text-sm text-gray-500">{{ task.completion_date|date:"F d, Y g:i A" }}</div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% for comment in comments %}
+                            <div class="relative flex items-start">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center z-10">
+                                    <i class="fas fa-comment text-gray-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ comment.user.get_full_name|default:comment.user.username }}</div>
+                                    <div class="text-sm text-gray-500">{{ comment.created_at|date:"F d, Y g:i A" }}</div>
+                                    <div class="mt-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+                                        {{ comment.comment }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="relative flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center z-10">
+                                <i class="fas fa-plus text-primary-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">Task Created</div>
+                                <div class="text-sm text-gray-500">{{ task.created_at|date:"F d, Y g:i A" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comment Form -->
+                <form method="post" class="mt-8">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Add Comment</label>
+                        <textarea id="comment" name="comment" rows="3" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            Post Comment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Checklist - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-lg mx-auto">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-2xl font-serif font-bold text-gray-900">Delete Checklist</h1>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex items-center justify-center mb-6">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                    </div>
+                </div>
+                
+                <h2 class="text-xl font-bold text-center text-gray-900 mb-4">
+                    Are you sure you want to delete this checklist?
+                </h2>
+                
+                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                    <h3 class="font-medium text-gray-900">{{ checklist.title }}</h3>
+                    {% if checklist.description %}
+                        <p class="text-gray-600 mt-1">{{ checklist.description|truncatechars:100 }}</p>
+                    {% endif %}
+                    
+                    {% if checklist.wedding %}
+                        <p class="text-sm text-gray-500 mt-2">Wedding: {{ checklist.wedding.title }}</p>
+                    {% else %}
+                        <p class="text-sm text-gray-500 mt-2">Template Checklist</p>
+                    {% endif %}
+                    
+                    <p class="text-sm text-gray-500 mt-1">Items: {{ checklist.items.count }}</p>
+                </div>
+                
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                This action cannot be undone. This will permanently delete the checklist and all its items.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="flex justify-end space-x-3">
+                        <a href="{% url 'checklist_detail' checklist_id=checklist.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                            <i class="fas fa-trash-alt mr-2"></i> Delete Checklist
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

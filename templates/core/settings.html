@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-800">Account Settings</h1>
+        <p class="text-gray-600 mt-2">Manage your account settings and preferences</p>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Settings Tabs -->
+        <div class="bg-gray-50 border-b border-gray-200">
+            <div class="flex">
+                <a href="#password" class="settings-tab px-6 py-4 text-sm font-medium text-primary-600 border-b-2 border-primary-600">
+                    <i class="fas fa-key mr-2"></i>Password
+                </a>
+                {% if user.profile.role == 'admin' or user.profile.role == 'team_member' %}
+                <a href="#notifications" class="settings-tab px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
+                    <i class="fas fa-bell mr-2"></i>Notifications
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Password Section -->
+        <div id="password" class="p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Change Password</h3>
+            <p class="text-gray-600 mb-6">Ensure your account is using a strong password to stay secure</p>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="space-y-4 max-w-md">
+                    <div>
+                        <label for="{{ password_form.old_password.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                        {{ password_form.old_password }}
+                        {% if password_form.old_password.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ password_form.old_password.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ password_form.new_password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                        {{ password_form.new_password1 }}
+                        {% if password_form.new_password1.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ password_form.new_password1.errors.0 }}</p>
+                        {% else %}
+                            <div class="text-gray-500 text-xs mt-1">
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li>Your password can't be too similar to your other personal information.</li>
+                                    <li>Your password must contain at least 8 characters.</li>
+                                    <li>Your password can't be a commonly used password.</li>
+                                    <li>Your password can't be entirely numeric.</li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ password_form.new_password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                        {{ password_form.new_password2 }}
+                        {% if password_form.new_password2.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ password_form.new_password2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button type="submit" class="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
+                        <i class="fas fa-save mr-2"></i>Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if user.profile.role == 'admin' or user.profile.role == 'team_member' %}
+        <!-- Notifications Section (Hidden by default, would be shown via JavaScript) -->
+        <div id="notifications" class="p-6 hidden">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Notification Preferences</h3>
+            <p class="text-gray-600 mb-6">Manage how you receive notifications and alerts</p>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between py-3 border-b border-gray-200">
+                    <div>
+                        <h4 class="font-medium text-gray-800">Email Notifications</h4>
+                        <p class="text-gray-600 text-sm">Receive email notifications for important updates</p>
+                    </div>
+                    <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+                        <input type="checkbox" id="email-notifications" class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer" checked>
+                        <span class="block w-12 h-6 bg-gray-300 rounded-full shadow-inner peer-checked:bg-primary-500 transition"></span>
+                        <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-6"></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-3 border-b border-gray-200">
+                    <div>
+                        <h4 class="font-medium text-gray-800">Task Reminders</h4>
+                        <p class="text-gray-600 text-sm">Receive reminders for upcoming tasks and deadlines</p>
+                    </div>
+                    <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+                        <input type="checkbox" id="task-reminders" class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer" checked>
+                        <span class="block w-12 h-6 bg-gray-300 rounded-full shadow-inner peer-checked:bg-primary-500 transition"></span>
+                        <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-6"></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between py-3 border-b border-gray-200">
+                    <div>
+                        <h4 class="font-medium text-gray-800">Event Notifications</h4>
+                        <p class="text-gray-600 text-sm">Receive notifications for upcoming events</p>
+                    </div>
+                    <div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+                        <input type="checkbox" id="event-notifications" class="absolute w-6 h-6 opacity-0 z-10 cursor-pointer peer" checked>
+                        <span class="block w-12 h-6 bg-gray-300 rounded-full shadow-inner peer-checked:bg-primary-500 transition"></span>
+                        <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-6"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button type="button" class="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
+                    <i class="fas fa-save mr-2"></i>Save Preferences
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.settings-tab');
+        const sections = document.querySelectorAll('[id^="password"], [id^="notifications"]');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Remove active state from all tabs
+                tabs.forEach(t => {
+                    t.classList.remove('text-primary-600', 'border-primary-600');
+                    t.classList.add('text-gray-500', 'border-transparent');
+                });
+
+                // Add active state to clicked tab
+                this.classList.remove('text-gray-500', 'border-transparent');
+                this.classList.add('text-primary-600', 'border-primary-600');
+
+                // Hide all sections
+                sections.forEach(section => {
+                    section.classList.add('hidden');
+                });
+
+                // Show the corresponding section
+                const targetId = this.getAttribute('href').substring(1);
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+    });
+</script>
+{% endblock %}

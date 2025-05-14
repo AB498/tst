@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ checklist.title }} - Wedding Management System{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle checklist item completion toggle
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('click', function(e) {
+                // Prevent the default checkbox behavior
+                e.preventDefault();
+                const itemId = this.dataset.itemId;
+                const itemTitle = this.dataset.itemTitle;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                // Show loading state
+                const itemRow = this.closest('tr');
+                const titleElement = itemRow.querySelector('.item-title');
+                // For non-guest users, there's no status-icon span, so we need to handle this differently
+                const statusIconContainer = itemRow.querySelector('.status-icon');
+                const completedByElement = itemRow.querySelector('.completed-by');
+                const completedDateElement = itemRow.querySelector('.completed-date');
+
+                console.log('Elements found:', {
+                    itemRow: !!itemRow,
+                    titleElement: !!titleElement,
+                    statusIconContainer: !!statusIconContainer,
+                    completedByElement: !!completedByElement,
+                    completedDateElement: !!completedDateElement
+                });
+
+                // Add loading class
+                itemRow.classList.add('opacity-50');
+
+                console.log('Toggling item:', itemId);
+
+                fetch(`{% url 'checklist_item_toggle' item_id=0 %}`.replace('0', itemId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    // Remove loading class
+                    itemRow.classList.remove('opacity-50');
+
+                    console.log('Response data:', data);
+
+                    if (data.status === 'success') {
+                        // Make sure checkbox reflects the correct state
+                        this.checked = data.is_completed;
+
+                        // Update UI based on completion status
+                        if (data.is_completed) {
+                            // Update title styling
+                            if (titleElement) {
+                                titleElement.classList.add('line-through', 'text-gray-500');
+                            }
+
+                            // Update status icon if it exists (for guest view)
+                            if (statusIconContainer) {
+                                statusIconContainer.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+                            }
+
+                            // Update completed by and date
+                            if (completedByElement) {
+                                completedByElement.textContent = 'You';
+                            }
+
+                            if (completedDateElement) {
+                                completedDateElement.textContent = 'Just now';
+                            }
+
+                            // Show success message
+                            showMessage('success', `Item "${itemTitle}" marked as complete.`);
+                        } else {
+                            // Update title styling
+                            if (titleElement) {
+                                titleElement.classList.remove('line-through', 'text-gray-500');
+                            }
+
+                            // Update status icon if it exists (for guest view)
+                            if (statusIconContainer) {
+                                statusIconContainer.innerHTML = '<i class="far fa-circle text-gray-400"></i>';
+                            }
+
+                            // Update completed by and date
+                            if (completedByElement) {
+                                completedByElement.textContent = '-';
+                            }
+
+                            if (completedDateElement) {
+                                completedDateElement.textContent = '-';
+                            }
+
+                            // Show success message
+                            showMessage('success', `Item "${itemTitle}" marked as incomplete.`);
+                        }
+                    } else {
+                        // Show error message
+                        showMessage('error', data.message || 'An error occurred');
+                        console.error('Error from server:', data.message);
+                        // Reset checkbox to original state
+                        this.checked = !this.checked;
+                    }
+                })
+                .catch(error => {
+                    // Remove loading class
+                    itemRow.classList.remove('opacity-50');
+
+                    // Show detailed error message
+                    const errorMessage = `Error: ${error.message || 'Unknown error'}`;
+                    showMessage('error', errorMessage);
+                    console.error('Error details:', error);
+                    console.error('Error message:', error.message);
+                    console.error('Error stack:', error.stack);
+
+                    // Reset checkbox to original state
+                    this.checked = !this.checked;
+
+                    // Reload the page if there's a serious error
+                    setTimeout(() => {
+                        if (confirm('There was an error updating the item. Would you like to reload the page?')) {
+                            window.location.reload();
+                        }
+                    }, 1000);
+                });
+            });
+        });
+
+        // Function to show messages
+        function showMessage(type, message) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertClass = type === 'success' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red-100 border-red-500 text-red-700';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            const alert = document.createElement('div');
+            alert.className = `${alertClass} px-4 py-3 rounded relative border-l-4 mb-4`;
+            alert.innerHTML = `
+                <div class="flex items-center">
+                    <div class="py-1 mr-2">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div>
+                        <p>${message}</p>
+                    </div>
+                    <button type="button" class="ml-auto close-alert">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            alertContainer.appendChild(alert);
+
+            // Add event listener to close button
+            alert.querySelector('.close-alert').addEventListener('click', function() {
+                alert.remove();
+            });
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Alert container for dynamic messages -->
+    <div id="alert-container" class="mb-4"></div>
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">{{ checklist.title }}</h1>
+            {% if checklist.wedding %}
+                <p class="text-gray-600">Checklist for {{ checklist.wedding.title }}</p>
+            {% else %}
+                <p class="text-gray-600">Template Checklist</p>
+            {% endif %}
+        </div>
+
+        {% if user.profile.role != 'guest' %}
+            <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                <a href="{% url 'checklist_edit' checklist_id=checklist.id %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                    <i class="fas fa-edit mr-2"></i> Edit Checklist
+                </a>
+                <a href="{% url 'checklist_delete' checklist_id=checklist.id %}" class="inline-flex items-center px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition duration-150 ease-in-out">
+                    <i class="fas fa-trash-alt mr-2"></i> Delete
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Checklist Description -->
+    {% if checklist.description %}
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Description</h2>
+            <p class="text-gray-700">{{ checklist.description }}</p>
+        </div>
+    {% endif %}
+
+    <!-- Checklist Items -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Checklist Items</h2>
+        </div>
+
+        {% if items %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed By</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% csrf_token %}
+                        {% for item in items %}
+                            <tr class="hover:bg-gray-50 transition duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        {% if user.profile.role != 'guest' %}
+                                            <input type="checkbox" class="item-checkbox h-5 w-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                                                   data-item-id="{{ item.id }}"
+                                                   data-item-title="{{ item.title }}"
+                                                   {% if item.is_completed %}checked{% endif %}>
+                                        {% else %}
+                                            <span class="status-icon">
+                                                {% if item.is_completed %}
+                                                    <i class="fas fa-check-circle text-green-500"></i>
+                                                {% else %}
+                                                    <i class="far fa-circle text-gray-400"></i>
+                                                {% endif %}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-gray-900 item-title {% if item.is_completed %}line-through text-gray-500{% endif %}">
+                                            {{ item.title }}
+                                        </span>
+                                        {% if item.description %}
+                                            <span class="text-xs text-gray-500 mt-1 {% if item.is_completed %}line-through{% endif %}">
+                                                {{ item.description }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if item.due_date %}
+                                        {{ item.due_date|date:"M d, Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 completed-by">
+                                    {% if item.completed_by %}
+                                        {{ item.completed_by.get_full_name|default:item.completed_by.username }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 completed-date">
+                                    {% if item.completed_date %}
+                                        {{ item.completed_date|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-8 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                    <i class="fas fa-clipboard-list text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Items Found</h3>
+                <p class="text-gray-600 mb-6">This checklist doesn't have any items yet.</p>
+                {% if user.profile.role != 'guest' %}
+                    <a href="{% url 'checklist_edit' checklist_id=checklist.id %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                        <i class="fas fa-plus mr-2"></i> Add Items
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Back Button -->
+    <div class="mt-8">
+        <a href="{% url 'checklist' %}{% if checklist.wedding %}?wedding={{ checklist.wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Checklists
+        </a>
+    </div>
+</div>
+{% endblock %}

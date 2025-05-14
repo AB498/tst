@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #9c27b0;
+            margin-bottom: 10px;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .invitation-message {
+            font-style: italic;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0e6f5;
+            border-left: 4px solid #9c27b0;
+            border-radius: 4px;
+        }
+        .wedding-details {
+            margin-bottom: 20px;
+        }
+        .wedding-details h3 {
+            color: #9c27b0;
+            margin-bottom: 10px;
+        }
+        .credentials {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .credentials h3 {
+            color: #2e7d32;
+            margin-top: 0;
+        }
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-code img {
+            max-width: 200px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin-top: 30px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #9c27b0;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Wedding Invitation</h1>
+        <p>{{ wedding.bride_name }} & {{ wedding.groom_name }}</p>
+    </div>
+
+    <div class="content">
+        <p>Dear {{ guest.name }},</p>
+
+        <div class="invitation-message">
+            {{ invitation.message }}
+        </div>
+
+        <div class="wedding-details">
+            <h3>Wedding Details</h3>
+            <p><strong>Date:</strong> {{ wedding.date }}</p>
+            <p><strong>Time:</strong> {{ wedding.time }}</p>
+            <p><strong>Location:</strong> {{ wedding.location }}</p>
+            <p><strong>Address:</strong> {{ wedding.address }}</p>
+        </div>
+
+        <div class="credentials">
+            <h3>Your Login Credentials</h3>
+            <p>To access the wedding portal and RSVP, please use the following credentials:</p>
+            <p><strong>Username:</strong> {{ username }}</p>
+            <p><strong>Password:</strong> {{ password }}</p>
+            <p>You can log in using one of the following methods:</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{{ direct_login_url }}" class="button" style="background-color: #4CAF50; margin-right: 10px;">Login with Username & Password</a>
+                <a href="{{ login_url }}" class="button">Login with QR Code</a>
+            </div>
+        </div>
+
+        <div class="qr-code">
+            <p>Scan this QR code to access the wedding portal:</p>
+            <img src="cid:qr_code.png" alt="QR Code">
+        </div>
+
+        <p>We look forward to celebrating our special day with you!</p>
+        <p>Warm regards,<br>{{ wedding.bride_name }} & {{ wedding.groom_name }}</p>
+    </div>
+
+    <div class="footer">
+        <p>This is an automated email. Please do not reply to this message.</p>
+        <p>&copy; {{ wedding.date.year }} Wedding Management System</p>
+    </div>
+</body>
+</html>

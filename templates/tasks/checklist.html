@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}Checklists - Wedding Management System{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Template dropdown toggle
+        const templateButton = document.getElementById('templateDropdownButton');
+        const templateDropdown = document.getElementById('templateDropdown');
+
+        if (templateButton && templateDropdown) {
+            templateButton.addEventListener('click', function() {
+                templateDropdown.classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!templateButton.contains(event.target) && !templateDropdown.contains(event.target)) {
+                    templateDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        // Second template dropdown toggle (for empty state)
+        const templateButton2 = document.getElementById('templateDropdownButton2');
+        const templateDropdown2 = document.getElementById('templateDropdown2');
+
+        if (templateButton2 && templateDropdown2) {
+            templateButton2.addEventListener('click', function() {
+                templateDropdown2.classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!templateButton2.contains(event.target) && !templateDropdown2.contains(event.target)) {
+                    templateDropdown2.classList.add('hidden');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">Checklists</h1>
+            {% if wedding %}
+                <p class="text-gray-600">Checklists for {{ wedding.title }}</p>
+            {% endif %}
+        </div>
+
+        {% if user.profile.role != 'guest' %}
+            <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                <a href="{% url 'checklist_create' %}{% if wedding %}?wedding={{ wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                    <i class="fas fa-plus mr-2"></i> New Checklist
+                </a>
+                {% if user.profile.role == 'admin' and templates %}
+                    <button id="templateDropdownButton" class="inline-flex items-center px-4 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition duration-150 ease-in-out">
+                        <i class="fas fa-copy mr-2"></i> Use Template
+                    </button>
+                    <div id="templateDropdown" class="hidden absolute mt-2 w-64 bg-white rounded-lg shadow-lg z-10">
+                        <div class="p-2 border-b border-gray-200">
+                            <h3 class="text-sm font-medium text-gray-700">Select a template</h3>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto">
+                            {% for template in templates %}
+                                <a href="{% url 'use_template' template_id=template.id %}{% if wedding %}?wedding={{ wedding.id }}{% endif %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    {{ template.title }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    {% if checklists %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for checklist in checklists %}
+                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-gray-900">{{ checklist.title }}</h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">
+                                {% with completed=checklist.items.filter.is_completed.count total=checklist.items.count %}
+                                    {{ completed }}/{{ total }} completed
+                                {% endwith %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        {% if checklist.description %}
+                            <p class="text-gray-700 text-sm mb-4">
+                                {{ checklist.description|truncatechars:100 }}
+                            </p>
+                        {% endif %}
+
+                        {% if not wedding %}
+                            <div class="text-sm text-primary-600 mb-4">
+                                {{ checklist.wedding.title }}
+                            </div>
+                        {% endif %}
+
+                        <div class="space-y-2">
+                            {% for item in checklist.items.all|slice:":5" %}
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-5 w-5 mr-2">
+                                        {% if item.is_completed %}
+                                            <i class="fas fa-check-circle text-green-500"></i>
+                                        {% else %}
+                                            <i class="far fa-circle text-gray-400"></i>
+                                        {% endif %}
+                                    </div>
+                                    <span class="text-sm text-gray-700 {% if item.is_completed %}line-through text-gray-500{% endif %}">
+                                        {{ item.title }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+
+                            {% if checklist.items.count > 5 %}
+                                <div class="text-sm text-gray-500 italic">
+                                    + {{ checklist.items.count|add:"-5" }} more items
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
+                        <a href="{% url 'checklist_detail' checklist_id=checklist.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                            <i class="fas fa-eye mr-1"></i> View
+                        </a>
+                        {% if user.profile.role != 'guest' %}
+                            <a href="{% url 'checklist_edit' checklist_id=checklist.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if templates %}
+            <div class="mt-12">
+                <h2 class="text-2xl font-serif font-bold text-gray-900 mb-6">Template Checklists</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for template in templates %}
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                                <h2 class="text-lg font-bold text-gray-900">{{ template.title }}</h2>
+                                <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    Template
+                                </span>
+                            </div>
+
+                            <div class="p-6">
+                                {% if template.description %}
+                                    <p class="text-gray-700 text-sm mb-4">
+                                        {{ template.description|truncatechars:100 }}
+                                    </p>
+                                {% endif %}
+
+                                <div class="space-y-2">
+                                    {% for item in template.items.all|slice:":5" %}
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-5 w-5 mr-2">
+                                                <i class="far fa-circle text-gray-400"></i>
+                                            </div>
+                                            <span class="text-sm text-gray-700">
+                                                {{ item.title }}
+                                            </span>
+                                        </div>
+                                    {% endfor %}
+
+                                    {% if template.items.count > 5 %}
+                                        <div class="text-sm text-gray-500 italic">
+                                            + {{ template.items.count|add:"-5" }} more items
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
+                                <a href="{% url 'checklist_detail' checklist_id=template.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                    <i class="fas fa-eye mr-1"></i> View
+                                </a>
+                                <a href="{% url 'use_template' template_id=template.id %}{% if wedding %}?wedding={{ wedding.id }}{% endif %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-primary-600 text-primary-600 rounded hover:bg-primary-50 transition">
+                                    <i class="fas fa-copy mr-1"></i> Use
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <i class="fas fa-clipboard-list text-gray-400 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">No Checklists Found</h2>
+            <p class="text-gray-600 mb-6">
+                {% if wedding %}
+                    There are no checklists for {{ wedding.title }} yet.
+                {% else %}
+                    There are no checklists available.
+                {% endif %}
+            </p>
+            {% if user.profile.role != 'guest' %}
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="{% url 'checklist_create' %}{% if wedding %}?wedding={{ wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                        <i class="fas fa-plus mr-2"></i> Create Checklist
+                    </a>
+                    {% if user.profile.role == 'admin' and templates %}
+                        <button id="templateDropdownButton2" class="inline-flex items-center px-4 py-2 border border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition">
+                            <i class="fas fa-copy mr-2"></i> Use Template
+                        </button>
+                        <div id="templateDropdown2" class="hidden absolute mt-2 w-64 bg-white rounded-lg shadow-lg z-10">
+                            <div class="p-2 border-b border-gray-200">
+                                <h3 class="text-sm font-medium text-gray-700">Select a template</h3>
+                            </div>
+                            <div class="max-h-60 overflow-y-auto">
+                                {% for template in templates %}
+                                    <a href="{% url 'use_template' template_id=template.id %}{% if wedding %}?wedding={{ wedding.id }}{% endif %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        {{ template.title }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

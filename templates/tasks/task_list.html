@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Tasks - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">Tasks</h1>
+            {% if wedding %}
+                <p class="text-gray-600">Tasks for {{ wedding.title }}</p>
+            {% endif %}
+        </div>
+
+        {% if user.profile.role != 'guest' %}
+            <a href="{% url 'task_create' %}{% if wedding %}?wedding={{ wedding.id }}{% endif %}" class="mt-4 md:mt-0 inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                <i class="fas fa-plus mr-2"></i> New Task
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white rounded-xl shadow-md p-4 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="inline-flex rounded-md shadow-sm">
+                <button class="filter-btn px-4 py-2 text-sm font-medium rounded-l-lg bg-primary-600 text-white" data-filter="all">All</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="pending">Pending</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="in_progress">In Progress</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="completed">Completed</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium rounded-r-lg bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="cancelled">Cancelled</button>
+            </div>
+
+            <div class="relative w-full md:w-64">
+                <input type="text" id="task-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Search tasks...">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if tasks %}
+        {% if wedding %}
+            <!-- Tasks for a specific wedding -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for task in tasks %}
+                    <div class="task-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300" data-status="{{ task.status }}">
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                            <span class="px-3 py-1 text-xs font-medium rounded-full
+                                {% if task.status == 'pending' %}bg-gray-200 text-gray-800
+                                {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                {% elif task.status == 'completed' %}bg-green-100 text-green-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ task.get_status_display }}
+                            </span>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full
+                                {% if task.priority == 'low' %}bg-gray-100 text-gray-800
+                                {% elif task.priority == 'medium' %}bg-blue-100 text-blue-800
+                                {% elif task.priority == 'high' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                        </div>
+
+                        <div class="p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ task.title }}</h2>
+                            {% if task.description %}
+                                <p class="text-gray-700 text-sm mb-4">
+                                    {{ task.description|truncatechars:100 }}
+                                </p>
+                            {% endif %}
+                            <div class="flex justify-between items-center text-sm text-gray-500">
+                                <div>
+                                    <i class="fas fa-calendar-day mr-1"></i> Due: {{ task.due_date|date:"M d, Y" }}
+                                    {% if task.task_time %}
+                                        <span class="ml-1">at {{ task.task_time|time:"g:i A" }}</span>
+                                    {% endif %}
+                                    {% if task.is_overdue %}
+                                        <span class="text-red-500 ml-1">(Overdue)</span>
+                                    {% endif %}
+                                </div>
+                                {% if task.assigned_to %}
+                                    <div>
+                                        <i class="fas fa-user mr-1"></i> {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
+                            <a href="{% url 'task_detail' task.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                <i class="fas fa-eye mr-1"></i> View
+                            </a>
+                            {% if user.profile.role != 'guest' and task.status != 'completed' %}
+                                <a href="{% url 'task_complete' task.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-green-500 text-green-700 rounded hover:bg-green-50 transition">
+                                    <i class="fas fa-check mr-1"></i> Complete
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Group tasks by wedding -->
+            {% regroup tasks by wedding as wedding_tasks %}
+
+            {% for wedding_group in wedding_tasks %}
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-serif font-bold text-gray-900">{{ wedding_group.grouper.title }}</h2>
+                        <a href="{% url 'task_create' %}?wedding={{ wedding_group.grouper.id }}" class="inline-flex items-center px-3 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 transition">
+                            <i class="fas fa-plus mr-1"></i> Add Task
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for task in wedding_group.list %}
+                            <div class="task-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300" data-status="{{ task.status }}">
+                                <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                                    <span class="px-3 py-1 text-xs font-medium rounded-full
+                                        {% if task.status == 'pending' %}bg-gray-200 text-gray-800
+                                        {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                        {% elif task.status == 'completed' %}bg-green-100 text-green-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ task.get_status_display }}
+                                    </span>
+                                    <span class="px-3 py-1 text-xs font-medium rounded-full
+                                        {% if task.priority == 'low' %}bg-gray-100 text-gray-800
+                                        {% elif task.priority == 'medium' %}bg-blue-100 text-blue-800
+                                        {% elif task.priority == 'high' %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                </div>
+
+                                <div class="p-6">
+                                    <h2 class="text-xl font-bold text-gray-900 mb-2">{{ task.title }}</h2>
+                                    {% if task.description %}
+                                        <p class="text-gray-700 text-sm mb-4">
+                                            {{ task.description|truncatechars:100 }}
+                                        </p>
+                                    {% endif %}
+                                    <div class="flex justify-between items-center text-sm text-gray-500">
+                                        <div>
+                                            <i class="fas fa-calendar-day mr-1"></i> Due: {{ task.due_date|date:"M d, Y" }}
+                                            {% if task.task_time %}
+                                                <span class="ml-1">at {{ task.task_time|time:"g:i A" }}</span>
+                                            {% endif %}
+                                            {% if task.is_overdue %}
+                                                <span class="text-red-500 ml-1">(Overdue)</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if task.assigned_to %}
+                                            <div>
+                                                <i class="fas fa-user mr-1"></i> {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
+                                    <a href="{% url 'task_detail' task.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                        <i class="fas fa-eye mr-1"></i> View
+                                    </a>
+                                    {% if user.profile.role != 'guest' and task.status != 'completed' %}
+                                        <a href="{% url 'task_complete' task.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-green-500 text-green-700 rounded hover:bg-green-50 transition">
+                                            <i class="fas fa-check mr-1"></i> Complete
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% else %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <i class="fas fa-tasks text-gray-400 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">No Tasks Found</h2>
+            <p class="text-gray-600 mb-6">
+                {% if wedding %}
+                    There are no tasks for {{ wedding.title }} yet.
+                {% else %}
+                    There are no tasks available.
+                {% endif %}
+            </p>
+            {% if user.profile.role != 'guest' %}
+                <a href="{% url 'task_create' %}{% if wedding %}?wedding={{ wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                    <i class="fas fa-plus mr-2"></i> Create Task
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Task filtering
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const taskCards = document.querySelectorAll('.task-card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active styles from all buttons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('bg-primary-600', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-700');
+                });
+
+                // Add active styles to clicked button
+                this.classList.remove('bg-white', 'text-gray-700');
+                this.classList.add('bg-primary-600', 'text-white');
+
+                const filter = this.getAttribute('data-filter');
+
+                taskCards.forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-status') === filter) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                // Check if any wedding section has no visible tasks
+                const weddingSections = document.querySelectorAll('.mb-8');
+                weddingSections.forEach(section => {
+                    const visibleCards = section.querySelectorAll('.task-card:not(.hidden)');
+                    if (visibleCards.length === 0) {
+                        section.classList.add('hidden');
+                    } else {
+                        section.classList.remove('hidden');
+                    }
+                });
+            });
+        });
+
+        // Task search
+        const searchInput = document.getElementById('task-search');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+
+            taskCards.forEach(card => {
+                const title = card.querySelector('h2').textContent.toLowerCase();
+                const description = card.querySelector('p') ? card.querySelector('p').textContent.toLowerCase() : '';
+                const wedding = card.closest('.mb-8') ? card.closest('.mb-8').querySelector('h2').textContent.toLowerCase() : '';
+
+                if (title.includes(searchTerm) || description.includes(searchTerm) || wedding.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            // Check if any wedding section has no visible tasks
+            const weddingSections = document.querySelectorAll('.mb-8');
+            weddingSections.forEach(section => {
+                const visibleCards = section.querySelectorAll('.task-card:not(.hidden)');
+                if (visibleCards.length === 0) {
+                    section.classList.add('hidden');
+                } else {
+                    section.classList.remove('hidden');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

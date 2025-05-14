@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ guest.name }} - Guest Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">{{ guest.name }}</h1>
+            <p class="text-gray-600">Guest for {{ guest.wedding.title }}</p>
+        </div>
+
+        <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+            {% if user.profile.role != 'guest' %}
+                <a href="{% url 'guest_edit' guest.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    <i class="fas fa-edit mr-2"></i> Edit
+                </a>
+                <a href="{% url 'guest_delete' guest.id %}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <i class="fas fa-trash mr-2"></i> Delete
+                </a>
+                {% if not guest.is_checked_in and guest.wedding.is_today %}
+                    <a href="{% url 'guest_checkin' %}?guest_id={{ guest.id }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-check-circle mr-2"></i> Check In
+                    </a>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'guest_list' %}{% if guest.wedding %}?wedding={{ guest.wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-arrow-left mr-2"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Guest Information Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Guest Information</h2>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="col-span-1 text-gray-500 font-medium">Status</div>
+                    <div class="col-span-2">
+                        <span class="px-3 py-1 text-xs font-medium rounded-full
+                            {% if guest.status == 'invited' %}bg-gray-200 text-gray-800
+                            {% elif guest.status == 'confirmed' %}bg-green-100 text-green-800
+                            {% elif guest.status == 'declined' %}bg-red-100 text-red-800
+                            {% elif guest.status == 'attended' %}bg-blue-100 text-blue-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ guest.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                {% if guest.email %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1 text-gray-500 font-medium">Email</div>
+                        <div class="col-span-2 text-gray-900">{{ guest.email }}</div>
+                    </div>
+                {% endif %}
+
+                {% if guest.phone %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1 text-gray-500 font-medium">Phone</div>
+                        <div class="col-span-2 text-gray-900">{{ guest.phone }}</div>
+                    </div>
+                {% endif %}
+
+                {% if guest.address %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1 text-gray-500 font-medium">Address</div>
+                        <div class="col-span-2 text-gray-900">{{ guest.address }}</div>
+                    </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="col-span-1 text-gray-500 font-medium">Plus Ones</div>
+                    <div class="col-span-2 text-gray-900">{{ guest.plus_ones }}</div>
+                </div>
+
+                {% if guest.invitation_sent %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1 text-gray-500 font-medium">Invitation Sent</div>
+                        <div class="col-span-2 text-gray-900">{{ guest.invitation_sent_date|date:"F d, Y" }}</div>
+                    </div>
+                {% endif %}
+
+                {% if guest.rsvp_date %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1 text-gray-500 font-medium">RSVP Date</div>
+                        <div class="col-span-2 text-gray-900">{{ guest.rsvp_date|date:"F d, Y" }}</div>
+                    </div>
+                {% endif %}
+
+                {% if guest.check_in_date %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1 text-gray-500 font-medium">Check-in Date</div>
+                        <div class="col-span-2 text-gray-900">{{ guest.check_in_date|date:"F d, Y g:i A" }}</div>
+                    </div>
+                {% endif %}
+
+                {% if guest.notes %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="col-span-1 text-gray-500 font-medium">Notes</div>
+                        <div class="col-span-2 text-gray-900">{{ guest.notes }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- QR Code Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">QR Code</h2>
+            </div>
+
+            <div class="p-6">
+                {% if credential %}
+                    <div class="flex flex-col items-center">
+                        {% if credential.qr_code %}
+                            <div class="mb-6">
+                                <img src="{{ credential.qr_code.url }}" alt="QR Code" class="w-48 h-48">
+                            </div>
+                        {% else %}
+                            <div class="w-48 h-48 bg-gray-200 flex flex-col items-center justify-center rounded mb-6">
+                                <i class="fas fa-qrcode text-gray-400 text-5xl mb-2"></i>
+                                <span class="text-sm text-gray-500 text-center">QR Code not generated</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="text-center space-y-2">
+                            <div class="text-gray-900">
+                                <span class="font-medium">Username:</span> {{ credential.username }}
+                            </div>
+                            <div class="text-gray-900">
+                                <span class="font-medium">Password:</span>
+                                {% if credential.password %}
+                                    {{ credential.password }}
+                                {% elif credential.temp_password %}
+                                    {{ credential.temp_password }}
+                                    <div class="text-xs text-gray-500 mt-1">(This password is temporary and will change each time you view this page)</div>
+                                {% else %}
+                                    <span class="text-gray-500">Not set</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-gray-900">
+                                <span class="font-medium">Expires:</span> {{ credential.expiry_date|date:"F d, Y" }}
+                            </div>
+                            <div class="mt-2">
+                                <span class="px-3 py-1 text-xs font-medium rounded-full
+                                    {% if credential.is_valid %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if credential.is_valid %}Valid{% else %}Expired{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-qrcode text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 mb-4">No QR code available for this guest.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Invitations Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden lg:col-span-2">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Invitations</h2>
+            </div>
+
+            <div class="p-6">
+                {% if invitations %}
+                    <div class="space-y-6">
+                        {% for invitation in invitations %}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ invitation.wedding.title }}</h3>
+                                        <div class="text-sm text-gray-500">Sent: {{ invitation.sent_date|date:"F d, Y" }}</div>
+                                    </div>
+                                    <span class="px-3 py-1 text-xs font-medium rounded-full
+                                        {% if invitation.viewed %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {% if invitation.viewed %}Viewed{% else %}Not Viewed{% endif %}
+                                    </span>
+                                </div>
+                                <div class="bg-white p-4 rounded border border-gray-200">
+                                    <p class="text-gray-700">{{ invitation.message }}</p>
+                                </div>
+                                {% if invitation.viewed %}
+                                    <div class="text-sm text-gray-500 mt-2">Viewed on: {{ invitation.viewed_date|date:"F d, Y" }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-envelope text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500">No invitations have been sent to this guest yet.</p>
+                        {% if user.profile.role != 'guest' %}
+                            <a href="{% url 'send_invitation' %}?wedding={{ guest.wedding.id }}" class="inline-flex items-center px-4 py-2 mt-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                                <i class="fas fa-envelope mr-2"></i> Send Invitation
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

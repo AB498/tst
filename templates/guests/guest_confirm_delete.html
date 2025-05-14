@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Guest - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">Delete Guest</h1>
+        
+        <a href="{% url 'guest_detail' guest.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </a>
+    </div>
+    
+    <!-- Delete Confirmation -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Confirm Deletion</h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">
+                            Are you sure you want to delete the guest "{{ guest.name }}"? This action cannot be undone.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Guest Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-500">Name:</span>
+                        <span class="text-gray-900 ml-2">{{ guest.name }}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-500">Wedding:</span>
+                        <span class="text-gray-900 ml-2">{{ guest.wedding.title }}</span>
+                    </div>
+                    {% if guest.email %}
+                        <div>
+                            <span class="font-medium text-gray-500">Email:</span>
+                            <span class="text-gray-900 ml-2">{{ guest.email }}</span>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <span class="font-medium text-gray-500">Status:</span>
+                        <span class="text-gray-900 ml-2">{{ guest.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post" class="flex justify-end space-x-4">
+                {% csrf_token %}
+                <a href="{% url 'guest_detail' guest.id %}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Delete Guest
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

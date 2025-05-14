@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Media - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">Upload Media</h1>
+
+        <a href="{% url 'gallery_list' %}{% if selected_wedding %}?wedding={{ selected_wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Gallery
+        </a>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Media Information</h2>
+        </div>
+
+        <div class="p-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+
+                {% if not selected_wedding %}
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="wedding" class="block text-sm font-medium text-gray-700 mb-1">Wedding *</label>
+                            <select id="wedding" name="wedding" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md" required>
+                                <option value="">Select a wedding</option>
+                                {% for wedding in available_weddings %}
+                                    <option value="{{ wedding.id }}">{{ wedding.title }} ({{ wedding.date|date:"F d, Y" }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                {% else %}
+                    <input type="hidden" name="wedding" value="{{ selected_wedding.id }}">
+
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">{{ selected_wedding.title }}</h3>
+                        <div class="text-sm text-gray-500">
+                            <p><span class="font-medium">Date:</span> {{ selected_wedding.date|date:"F d, Y" }}</p>
+                            <p><span class="font-medium">Couple:</span> {{ selected_wedding.bride_name }} & {{ selected_wedding.groom_name }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                        <input type="text" id="title" name="title" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                    </div>
+
+                    <div>
+                        <label for="media_type" class="block text-sm font-medium text-gray-700 mb-1">Media Type *</label>
+                        <select id="media_type" name="media_type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md" required>
+                            <option value="photo">Photo</option>
+                            <option value="video">Video</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" name="description" rows="3" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                </div>
+
+                <div>
+                    <label for="file" class="block text-sm font-medium text-gray-700 mb-1">File *</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <div id="file-preview-container" class="hidden mb-4">
+                                <div id="image-preview" class="hidden">
+                                    <img id="preview-image" src="" alt="Preview" class="max-h-48 mx-auto rounded">
+                                </div>
+                                <div id="video-preview" class="hidden">
+                                    <video id="preview-video" controls class="max-h-48 mx-auto rounded">
+                                        <source src="" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                                <p id="file-name" class="text-sm text-gray-600 mt-2"></p>
+                            </div>
+                            <svg id="upload-icon" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                                    <span>Upload a file</span>
+                                    <input id="file-upload" name="file" type="file" class="sr-only" required accept="image/*,video/*">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                PNG, JPG, GIF up to 10MB (for photos) or MP4 up to 50MB (for videos)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select id="category" name="category" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="">No Category</option>
+                            {% if categories %}
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="guest" class="block text-sm font-medium text-gray-700 mb-1">Guest</label>
+                        <select id="guest" name="guest" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="">No Guest</option>
+                            {% if guests %}
+                                {% for guest in guests %}
+                                    <option value="{{ guest.id }}">{{ guest.name }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center">
+                        <input id="is_private" name="is_private" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="is_private" class="ml-2 block text-sm text-gray-900">
+                            Private
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input id="is_public" name="is_public" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="is_public" class="ml-2 block text-sm text-gray-900">
+                            Public
+                        </label>
+                    </div>
+
+                    {% if user.profile.role != 'guest' %}
+                        <div class="flex items-center">
+                            <input id="is_featured" name="is_featured" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                            <label for="is_featured" class="ml-2 block text-sm text-gray-900">
+                                Featured
+                            </label>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        Upload Media
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wedding selection change
+        const weddingSelect = document.getElementById('wedding');
+        if (weddingSelect) {
+            weddingSelect.addEventListener('change', function() {
+                if (this.value) {
+                    window.location.href = `{% url 'gallery_upload' %}?wedding=${this.value}`;
+                }
+            });
+        }
+
+        // File upload preview
+        const fileUpload = document.getElementById('file-upload');
+        const mediaType = document.getElementById('media_type');
+        const previewContainer = document.getElementById('file-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const videoPreview = document.getElementById('video-preview');
+        const previewImage = document.getElementById('preview-image');
+        const previewVideo = document.getElementById('preview-video');
+        const fileName = document.getElementById('file-name');
+        const uploadIcon = document.getElementById('upload-icon');
+
+        if (fileUpload && mediaType) {
+            fileUpload.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    // Update file name display
+                    fileName.textContent = file.name;
+
+                    // Show preview container
+                    previewContainer.classList.remove('hidden');
+
+                    // Hide upload icon when preview is shown
+                    uploadIcon.classList.add('hidden');
+
+                    const fileType = file.type.split('/')[0];
+                    if (fileType === 'image') {
+                        // Set media type to photo
+                        mediaType.value = 'photo';
+
+                        // Show image preview, hide video preview
+                        imagePreview.classList.remove('hidden');
+                        videoPreview.classList.add('hidden');
+
+                        // Create object URL for the image
+                        const objectUrl = URL.createObjectURL(file);
+                        previewImage.src = objectUrl;
+
+                        // Auto-fill title if empty
+                        const titleInput = document.getElementById('title');
+                        if (titleInput && !titleInput.value) {
+                            // Use file name without extension as default title
+                            titleInput.value = file.name.split('.').slice(0, -1).join('.');
+                        }
+                    } else if (fileType === 'video') {
+                        // Set media type to video
+                        mediaType.value = 'video';
+
+                        // Show video preview, hide image preview
+                        videoPreview.classList.remove('hidden');
+                        imagePreview.classList.add('hidden');
+
+                        // Create object URL for the video
+                        const objectUrl = URL.createObjectURL(file);
+                        previewVideo.src = objectUrl;
+
+                        // Auto-fill title if empty
+                        const titleInput = document.getElementById('title');
+                        if (titleInput && !titleInput.value) {
+                            // Use file name without extension as default title
+                            titleInput.value = file.name.split('.').slice(0, -1).join('.');
+                        }
+                    } else {
+                        // Unsupported file type
+                        previewContainer.classList.add('hidden');
+                        uploadIcon.classList.remove('hidden');
+                        alert('Please select an image or video file.');
+                        fileUpload.value = ''; // Clear the file input
+                    }
+                } else {
+                    // No file selected, hide preview
+                    previewContainer.classList.add('hidden');
+                    uploadIcon.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Add drag and drop functionality
+        const dropZone = document.querySelector('.border-dashed');
+        if (dropZone && fileUpload) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropZone.classList.add('border-primary-500', 'bg-primary-50');
+                dropZone.classList.remove('border-gray-300');
+            }
+
+            function unhighlight() {
+                dropZone.classList.remove('border-primary-500', 'bg-primary-50');
+                dropZone.classList.add('border-gray-300');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    fileUpload.files = files;
+                    // Trigger change event manually
+                    const event = new Event('change');
+                    fileUpload.dispatchEvent(event);
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

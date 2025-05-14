@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Guest Dashboard - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">Guest Dashboard</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Your Weddings Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Your Weddings</h2>
+            </div>
+
+            <div class="p-6">
+                {% if guest_profiles %}
+                    <div class="space-y-4">
+                        {% for guest in guest_profiles %}
+                            <div class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                                    <div class="mb-3 md:mb-0">
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ guest.wedding.title }}</h3>
+                                        <div class="text-sm text-gray-600 mt-1">
+                                            <span class="mr-3">{{ guest.wedding.bride_name }} & {{ guest.wedding.groom_name }}</span>
+                                            <span>{{ guest.wedding.date|date:"F d, Y" }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-3">
+                                        <span class="px-3 py-1 text-xs font-medium rounded-full
+                                            {% if guest.wedding.status == 'planning' %}bg-gray-200 text-gray-800
+                                            {% elif guest.wedding.status == 'upcoming' %}bg-blue-100 text-blue-800
+                                            {% elif guest.wedding.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                            {% elif guest.wedding.status == 'completed' %}bg-green-100 text-green-800
+                                            {% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ guest.wedding.get_status_display }}
+                                        </span>
+                                        <span class="px-3 py-1 text-xs font-medium rounded-full
+                                            {% if guest.status == 'invited' %}bg-gray-200 text-gray-800
+                                            {% elif guest.status == 'confirmed' %}bg-green-100 text-green-800
+                                            {% elif guest.status == 'declined' %}bg-red-100 text-red-800
+                                            {% elif guest.status == 'attended' %}bg-blue-100 text-blue-800
+                                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                            {{ guest.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    <a href="{% url 'wedding_detail' guest.wedding.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                        <i class="fas fa-eye mr-1"></i> View Details
+                                    </a>
+                                    {% if not guest.is_checked_in and guest.wedding.is_today %}
+                                        <a href="{% url 'guest_checkin' %}?guest_id={{ guest.id }}" class="inline-flex items-center px-3 py-1.5 text-sm bg-primary-600 text-white rounded hover:bg-primary-700 transition">
+                                            <i class="fas fa-check-circle mr-1"></i> Check In
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-heart-broken text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500">You haven't been invited to any weddings yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Events Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Upcoming Events</h2>
+            </div>
+
+            <div class="p-6">
+                {% if upcoming_events %}
+                    <div class="space-y-6">
+                        {% for event in upcoming_events %}
+                            <div class="flex">
+                                <div class="flex-shrink-0 mr-4">
+                                    <div class="w-14 h-14 bg-primary-100 rounded-lg flex flex-col items-center justify-center text-primary-600">
+                                        <div class="text-lg font-bold leading-none">{{ event.date|date:"d" }}</div>
+                                        <div class="text-xs uppercase">{{ event.date|date:"M" }}</div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ event.name }}</h3>
+                                    <div class="text-sm text-gray-600 mt-1">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-clock text-gray-400 mr-1"></i>
+                                            <span>{{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}</span>
+                                        </div>
+                                        <div class="flex items-center mt-1">
+                                            <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i>
+                                            <span>{{ event.location }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-primary-600 mt-2">{{ event.wedding.title }}</div>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}
+                                <div class="border-t border-gray-200 my-4"></div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-calendar-times text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500">No upcoming events scheduled.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- QR Codes Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Your QR Codes</h2>
+            </div>
+
+            <div class="p-6">
+                {% if guest_profiles %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for guest in guest_profiles %}
+                            {% if guest.credential %}
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="text-center mb-3">
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ guest.wedding.title }}</h3>
+                                    </div>
+                                    <div class="flex justify-center mb-4">
+                                        {% if guest.credential.qr_code %}
+                                            <img src="{{ guest.credential.qr_code.url }}" alt="QR Code" class="w-32 h-32">
+                                        {% else %}
+                                            <div class="w-32 h-32 bg-gray-200 flex flex-col items-center justify-center rounded">
+                                                <i class="fas fa-qrcode text-gray-400 text-3xl mb-2"></i>
+                                                <span class="text-xs text-gray-500 text-center">QR Code not generated</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-gray-700">
+                                        <div class="mb-1"><span class="font-medium">Username:</span> {{ guest.credential.username }}</div>
+                                        <div><span class="font-medium">Expires:</span> {{ guest.credential.expiry_date|date:"F d, Y" }}</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-qrcode text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500">No QR codes available.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Quick Actions</h2>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="{% url 'gallery_list' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-3">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">View Photos</span>
+                    </a>
+
+                    <a href="{% url 'gallery_upload' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-3">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">Upload Photos</span>
+                    </a>
+
+                    <a href="#" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 mb-3">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">View Themes</span>
+                    </a>
+
+                    <a href="#" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3">
+                            <i class="fas fa-user-edit"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">Update Profile</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ wedding.title }} - Gallery{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">{{ wedding.title }} Gallery</h1>
+            <p class="text-gray-600">{{ wedding.bride_name }} & {{ wedding.groom_name }}</p>
+        </div>
+
+        <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+            <a href="{% url 'gallery_upload' %}?wedding={{ wedding.id }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                <i class="fas fa-upload mr-2"></i> Upload Media
+            </a>
+            <a href="{% url 'guest_gallery' wedding.id %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                <i class="fas fa-users mr-2"></i> Guest Gallery
+            </a>
+            {% if user.profile.role == 'admin' or user.profile.role == 'team_member' %}
+            <a href="{% url 'gallery_settings' wedding.id %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                <i class="fas fa-cog mr-2"></i> Gallery Settings
+            </a>
+            {% endif %}
+            <a href="{% url 'wedding_detail' wedding.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Wedding
+            </a>
+        </div>
+    </div>
+
+    <!-- Wedding Info Banner -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+        <div class="bg-primary-600 px-6 py-4 text-white">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">{{ wedding.title }}</h2>
+                    <p>{{ wedding.date|date:"F d, Y" }}</p>
+                </div>
+                <div class="mt-2 md:mt-0 flex items-center space-x-3">
+                    {% if is_invited %}
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                            <i class="fas fa-envelope-open-text mr-1"></i> Invited ({{ invitation_permission|title }} Access)
+                        </span>
+                    {% endif %}
+                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-white text-primary-800">
+                        {{ media_items|length }} Media Items
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Categories -->
+    <div class="bg-white rounded-xl shadow-md p-4 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="inline-flex rounded-md shadow-sm">
+                <button class="filter-btn px-4 py-2 text-sm font-medium rounded-l-lg bg-primary-600 text-white" data-filter="all">All</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="photo">Photos</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium rounded-r-lg bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="video">Videos</button>
+            </div>
+
+            {% if categories %}
+                <div class="relative w-full md:w-64">
+                    <select id="category-filter" class="w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+
+            <div class="relative w-full md:w-64">
+                <input type="text" id="media-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Search media...">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if media_items %}
+        <!-- Featured Media -->
+        {% with featured=media_items|dictsortreversed:"is_featured"|slice:":1" %}
+            {% if featured.0.is_featured %}
+                <div class="mb-8">
+                    <h2 class="text-2xl font-serif font-bold text-gray-900 mb-4">Featured</h2>
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="relative bg-gray-900" style="height: 400px;">
+                            {% if featured.0.is_photo %}
+                                <img src="{{ featured.0.file.url }}" alt="{{ featured.0.title }}" class="object-contain w-full h-full">
+                            {% else %}
+                                <video controls class="w-full h-full object-contain">
+                                    <source src="{{ featured.0.file.url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            {% endif %}
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ featured.0.title }}</h3>
+                            {% if featured.0.description %}
+                                <p class="text-gray-700 mb-4">{{ featured.0.description }}</p>
+                            {% endif %}
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                    <div>
+                                        <i class="fas fa-heart mr-1 {% if featured.0.likes.count > 0 %}text-red-500{% endif %}"></i>
+                                        <span>{{ featured.0.likes.count }}</span>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-comment mr-1"></i>
+                                        <span>{{ featured.0.comments.count }}</span>
+                                    </div>
+                                </div>
+                                <a href="{% url 'media_detail' featured.0.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                                    <i class="fas fa-eye mr-2"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Media Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for media in media_items %}
+                {% if not media.is_featured or forloop.counter > 1 %}
+                    <div class="media-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 flex flex-col h-full"
+                         data-type="{{ media.media_type }}"
+                         data-category="{{ media.category.id|default:'' }}">
+                        <div class="relative bg-gray-200" style="height: 200px;">
+                            {% if media.is_photo %}
+                                <img src="{{ media.file.url }}" alt="{{ media.title }}" class="object-cover w-full h-full">
+                            {% else %}
+                                <div class="flex items-center justify-center h-full">
+                                    <i class="fas fa-play-circle text-gray-400 text-4xl"></i>
+                                </div>
+                            {% endif %}
+
+                            {% if media.is_private %}
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-800 text-white">
+                                        <i class="fas fa-lock mr-1"></i> Private
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="p-4 flex-grow">
+                            <h2 class="text-lg font-bold text-gray-900 truncate">{{ media.title }}</h2>
+                            <div class="flex justify-between items-center text-sm text-gray-500 mt-2">
+                                <div>
+                                    <i class="{% if media.is_photo %}fas fa-camera{% else %}fas fa-video{% endif %} mr-1"></i>
+                                    {{ media.get_media_type_display }}
+                                </div>
+                                <div>
+                                    <i class="fas fa-calendar-day mr-1"></i> {{ media.upload_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center mt-auto">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="fas fa-heart mr-1 {% if media.likes.count > 0 %}text-red-500{% endif %}"></i>
+                                <span>{{ media.likes.count }}</span>
+                                <i class="fas fa-comment ml-3 mr-1"></i>
+                                <span>{{ media.comments.count }}</span>
+                            </div>
+                            <a href="{% url 'media_detail' media.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                <i class="fas fa-eye mr-1"></i> View
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <i class="fas fa-images text-gray-400 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">No Media Found</h2>
+            <p class="text-gray-600 mb-6">
+                There are no photos or videos for {{ wedding.title }} yet.
+            </p>
+            <a href="{% url 'gallery_upload' %}?wedding={{ wedding.id }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                <i class="fas fa-upload mr-2"></i> Upload Media
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Media filtering by type
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const mediaCards = document.querySelectorAll('.media-card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active styles from all buttons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('bg-primary-600', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-700');
+                });
+
+                // Add active styles to clicked button
+                this.classList.remove('bg-white', 'text-gray-700');
+                this.classList.add('bg-primary-600', 'text-white');
+
+                const filter = this.getAttribute('data-filter');
+
+                mediaCards.forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-type') === filter) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Media filtering by category
+        const categoryFilter = document.getElementById('category-filter');
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', function() {
+                const categoryId = this.value;
+
+                mediaCards.forEach(card => {
+                    if (!categoryId || card.getAttribute('data-category') === categoryId) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Media search
+        const searchInput = document.getElementById('media-search');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+
+            mediaCards.forEach(card => {
+                const title = card.querySelector('h2').textContent.toLowerCase();
+
+                if (title.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

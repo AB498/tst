@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Invitations - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">Send Invitations</h1>
+        
+        <a href="{% if wedding %}{% url 'guest_list' %}?wedding={{ wedding.id }}{% else %}{% url 'guest_list' %}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Guests
+        </a>
+    </div>
+    
+    <!-- Send Invitation Form -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Invitation Details</h2>
+        </div>
+        
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if not wedding %}
+                    <div>
+                        <label for="wedding" class="block text-sm font-medium text-gray-700 mb-1">Wedding *</label>
+                        <select id="wedding" name="wedding" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md" required>
+                            <option value="">Select a wedding</option>
+                            {% for wedding in available_weddings %}
+                                <option value="{{ wedding.id }}">{{ wedding.title }} ({{ wedding.date|date:"F d, Y" }})</option>
+                            {% endfor %}
+                        </select>
+                        <p class="mt-2 text-sm text-gray-500">Select a wedding to see available guests.</p>
+                    </div>
+                {% else %}
+                    <input type="hidden" name="wedding" value="{{ wedding.id }}">
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">{{ wedding.title }}</h3>
+                        <div class="text-sm text-gray-500">
+                            <p><span class="font-medium">Date:</span> {{ wedding.date|date:"F d, Y" }}</p>
+                            <p><span class="font-medium">Couple:</span> {{ wedding.bride_name }} & {{ wedding.groom_name }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if guests %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Guests *</label>
+                            <div class="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <input id="select-all" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                        <label for="select-all" class="ml-2 block text-sm text-gray-900 font-medium">
+                                            Select All
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="border-t border-gray-200 my-2"></div>
+                                    
+                                    {% for guest in guests %}
+                                        <div class="flex items-center">
+                                            <input id="guest-{{ guest.id }}" name="guests" value="{{ guest.id }}" type="checkbox" class="guest-checkbox h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                            <label for="guest-{{ guest.id }}" class="ml-2 block text-sm text-gray-900">
+                                                {{ guest.name }}
+                                                {% if guest.email %}
+                                                    <span class="text-gray-500">({{ guest.email }})</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Invitation Message *</label>
+                            <textarea id="message" name="message" rows="6" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required></textarea>
+                            <p class="mt-2 text-sm text-gray-500">Write a personalized invitation message for your guests.</p>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                Send Invitations
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                                <i class="fas fa-envelope text-gray-400 text-2xl"></i>
+                            </div>
+                            <p class="text-gray-500 mb-4">No guests available for invitation.</p>
+                            <a href="{% url 'guest_create' %}?wedding={{ wedding.id }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                                <i class="fas fa-user-plus mr-2"></i> Add Guest
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckbox = document.getElementById('select-all');
+        const guestCheckboxes = document.querySelectorAll('.guest-checkbox');
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                
+                guestCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+            });
+            
+            // Update "Select All" checkbox when individual checkboxes change
+            guestCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(guestCheckboxes).every(cb => cb.checked);
+                    const someChecked = Array.from(guestCheckboxes).some(cb => cb.checked);
+                    
+                    selectAllCheckbox.checked = allChecked;
+                    selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                });
+            });
+        }
+        
+        // Wedding selection change
+        const weddingSelect = document.getElementById('wedding');
+        if (weddingSelect) {
+            weddingSelect.addEventListener('change', function() {
+                if (this.value) {
+                    window.location.href = `{% url 'send_invitation' %}?wedding=${this.value}`;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

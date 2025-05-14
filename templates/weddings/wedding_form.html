@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Wedding - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">{{ action }} Wedding</h1>
+
+        <a href="{% if wedding %}{% url 'wedding_detail' wedding.id %}{% else %}{% url 'wedding_list' %}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </a>
+    </div>
+
+    <!-- Wedding Form -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <form method="post" class="divide-y divide-gray-200">
+            {% csrf_token %}
+
+            <!-- Basic Information Section -->
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Basic Information</h2>
+
+                <div class="space-y-6">
+                    <div>
+                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Wedding Title *</label>
+                        <input type="text" name="{{ form.title.html_name }}" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                        {% if form.title.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.title.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea name="{{ form.description.html_name }}" id="{{ form.description.id_for_label }}" rows="3" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="{{ form.bride_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Bride's Name *</label>
+                            <input type="text" name="{{ form.bride_name.html_name }}" id="{{ form.bride_name.id_for_label }}" value="{{ form.bride_name.value|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                            {% if form.bride_name.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.bride_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.groom_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Groom's Name *</label>
+                            <input type="text" name="{{ form.groom_name.html_name }}" id="{{ form.groom_name.id_for_label }}" value="{{ form.groom_name.value|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                            {% if form.groom_name.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.groom_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date & Location Section -->
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Date & Location</h2>
+
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Wedding Date *</label>
+                            <input type="date" name="{{ form.date.html_name }}" id="{{ form.date.id_for_label }}" value="{{ form.date.value|date:'Y-m-d'|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                            {% if form.date.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.time.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Wedding Time *</label>
+                            <input type="time" name="{{ form.time.html_name }}" id="{{ form.time.id_for_label }}" value="{{ form.time.value|time:'H:i'|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                            {% if form.time.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Venue Name *</label>
+                        <input type="text" name="{{ form.location.html_name }}" id="{{ form.location.id_for_label }}" value="{{ form.location.value|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                        {% if form.location.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.location.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Venue Address *</label>
+                        <textarea name="{{ form.address.html_name }}" id="{{ form.address.id_for_label }}" rows="2" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>{{ form.address.value|default:'' }}</textarea>
+                        {% if form.address.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.address.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Status</h2>
+
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Wedding Status *</label>
+                    <select name="{{ form.status.html_name }}" id="{{ form.status.id_for_label }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md" required>
+                        {% for value, text in form.fields.status.choices %}
+                            <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ text }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.status.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.status.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tasks Section -->
+            {% if not wedding %}
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Initial Tasks</h2>
+                <p class="text-gray-600 mb-4">Add initial tasks for this wedding. You can add more tasks later.</p>
+
+                <div id="tasks-container">
+                    <div class="task-item border border-gray-200 rounded-lg p-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Task Title *</label>
+                                <input type="text" name="task_title_1" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                                <input type="date" name="task_due_date_1" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Task Time</label>
+                                <input type="time" name="task_time_1" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                <select name="task_priority_1" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="task_description_1" rows="2" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="task-count" name="task_count" value="1">
+
+                <button type="button" id="add-task-btn" class="mt-2 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    <i class="fas fa-plus mr-2"></i> Add Another Task
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-4">
+                <a href="{% if wedding %}{% url 'wedding_detail' wedding.id %}{% else %}{% url 'wedding_list' %}{% endif %}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    {{ action }} Wedding
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const tasksContainer = document.getElementById('tasks-container');
+        const taskCountInput = document.getElementById('task-count');
+
+        if (addTaskBtn && tasksContainer && taskCountInput) {
+            addTaskBtn.addEventListener('click', function() {
+                let taskCount = parseInt(taskCountInput.value) + 1;
+                taskCountInput.value = taskCount;
+
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item border border-gray-200 rounded-lg p-4 mb-4';
+
+                taskItem.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-medium">Task #${taskCount}</h3>
+                        <button type="button" class="remove-task-btn text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Task Title *</label>
+                            <input type="text" name="task_title_${taskCount}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                            <input type="date" name="task_due_date_${taskCount}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Task Time</label>
+                            <input type="time" name="task_time_${taskCount}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select name="task_priority_${taskCount}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea name="task_description_${taskCount}" rows="2" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                    </div>
+                `;
+
+                tasksContainer.appendChild(taskItem);
+
+                // Add event listener to the remove button
+                const removeBtn = taskItem.querySelector('.remove-task-btn');
+                removeBtn.addEventListener('click', function() {
+                    taskItem.remove();
+                    // We don't decrement taskCount to keep the names unique
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

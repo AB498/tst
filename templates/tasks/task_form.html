@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if task %}Edit{% else %}Create{% endif %} Task - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">
+            {% if task %}Edit{% else %}Create{% endif %} Task
+        </h1>
+
+        <a href="{% if task %}{% url 'task_detail' task.id %}{% else %}{% url 'task_list' %}{% if selected_wedding %}?wedding={{ selected_wedding.id }}{% endif %}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </a>
+    </div>
+
+    <!-- Task Form -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Task Information</h2>
+        </div>
+
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                {% if not task and not selected_wedding %}
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="wedding" class="block text-sm font-medium text-gray-700 mb-1">Wedding *</label>
+                            <select id="wedding" name="wedding" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md" required>
+                                <option value="">Select a wedding</option>
+                                {% for wedding in available_weddings %}
+                                    <option value="{{ wedding.id }}">{{ wedding.title }} ({{ wedding.date|date:"F d, Y" }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                        <input type="text" id="title" name="title" value="{{ task.title|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                    </div>
+
+                    <div>
+                        <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                        <input type="date" id="due_date" name="due_date" value="{{ task.due_date|date:'Y-m-d'|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="task_time" class="block text-sm font-medium text-gray-700 mb-1">Task Time</label>
+                    <input type="time" id="task_time" name="task_time" value="{{ task.task_time|time:'H:i'|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select id="priority" name="priority" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
+                            <option value="medium" {% if task.priority == 'medium' or not task %}selected{% endif %}>Medium</option>
+                            <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
+                            <option value="urgent" {% if task.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                        <select id="assigned_to" name="assigned_to" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="">Not Assigned</option>
+                            {% if task.wedding %}
+                                <option value="{{ task.wedding.admin.id }}" {% if task.assigned_to == task.wedding.admin %}selected{% endif %}>
+                                    {{ task.wedding.admin.get_full_name|default:task.wedding.admin.username }} (Admin)
+                                </option>
+                                {% for team_member in task.wedding.team_members.all %}
+                                    <option value="{{ team_member.member.id }}" {% if task.assigned_to == team_member.member %}selected{% endif %}>
+                                        {{ team_member.member.get_full_name|default:team_member.member.username }} ({{ team_member.role }})
+                                    </option>
+                                {% endfor %}
+                            {% elif selected_wedding %}
+                                <option value="{{ selected_wedding.admin.id }}">
+                                    {{ selected_wedding.admin.get_full_name|default:selected_wedding.admin.username }} (Admin)
+                                </option>
+                                {% for team_member in selected_wedding.team_members.all %}
+                                    <option value="{{ team_member.member.id }}">
+                                        {{ team_member.member.get_full_name|default:team_member.member.username }} ({{ team_member.role }})
+                                    </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+
+                {% if task %}
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                {% endif %}
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" name="description" rows="4" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">{{ task.description|default:'' }}</textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        {% if task %}Update{% else %}Create{% endif %} Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wedding selection change
+        const weddingSelect = document.getElementById('wedding');
+        if (weddingSelect) {
+            weddingSelect.addEventListener('change', function() {
+                if (this.value) {
+                    window.location.href = `{% url 'task_create' %}?wedding=${this.value}`;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

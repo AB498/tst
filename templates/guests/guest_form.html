@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if guest %}Edit{% else %}Add{% endif %} Guest - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">
+            {% if guest %}Edit{% else %}Add{% endif %} Guest
+        </h1>
+
+        <a href="{% if guest %}{% url 'guest_detail' guest.id %}{% else %}{% url 'guest_list' %}{% if selected_wedding %}?wedding={{ selected_wedding.id }}{% endif %}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </a>
+    </div>
+
+    <!-- Guest Form -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Guest Information</h2>
+        </div>
+
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                {% if not guest and not selected_wedding %}
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="wedding" class="block text-sm font-medium text-gray-700 mb-1">Wedding *</label>
+                            <select id="wedding" name="wedding" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md" required>
+                                <option value="">Select a wedding</option>
+                                {% for wedding in available_weddings %}
+                                    <option value="{{ wedding.id }}">{{ wedding.title }} ({{ wedding.date|date:"F d, Y" }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                {% elif selected_wedding %}
+                    <input type="hidden" name="wedding" value="{{ selected_wedding.id }}">
+                    <div class="mb-4">
+                        <div class="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                            <div>
+                                <p class="text-sm text-blue-700">
+                                    Adding guest to wedding: <span class="font-semibold">{{ selected_wedding.title }}</span> ({{ selected_wedding.date|date:"F d, Y" }})
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% elif guest %}
+                    <input type="hidden" name="wedding" value="{{ guest.wedding.id }}">
+                    <div class="mb-4">
+                        <div class="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                            <div>
+                                <p class="text-sm text-blue-700">
+                                    Editing guest for wedding: <span class="font-semibold">{{ guest.wedding.title }}</span> ({{ guest.wedding.date|date:"F d, Y" }})
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input type="text" id="name" name="name" value="{{ guest.name|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" name="email" value="{{ guest.email|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <input type="text" id="phone" name="phone" value="{{ guest.phone|default:'' }}" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    </div>
+
+                    <div>
+                        <label for="plus_ones" class="block text-sm font-medium text-gray-700 mb-1">Plus Ones</label>
+                        <input type="number" id="plus_ones" name="plus_ones" value="{{ guest.plus_ones|default:'0' }}" min="0" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <textarea id="address" name="address" rows="3" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">{{ guest.address|default:'' }}</textarea>
+                </div>
+
+                {% if guest %}
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="invited" {% if guest.status == 'invited' %}selected{% endif %}>Invited</option>
+                            <option value="confirmed" {% if guest.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                            <option value="declined" {% if guest.status == 'declined' %}selected{% endif %}>Declined</option>
+                            <option value="attended" {% if guest.status == 'attended' %}selected{% endif %}>Attended</option>
+                            <option value="no_show" {% if guest.status == 'no_show' %}selected{% endif %}>No Show</option>
+                        </select>
+                    </div>
+                {% endif %}
+
+                <div>
+                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea id="notes" name="notes" rows="3" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">{{ guest.notes|default:'' }}</textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        {% if guest %}Update{% else %}Create{% endif %} Guest
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

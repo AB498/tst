@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Weddings - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">Weddings</h1>
+        {% if user.profile.role == 'admin' %}
+            <a href="{% url 'wedding_create' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                <i class="fas fa-plus mr-2"></i> New Wedding
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white rounded-xl shadow-md p-4 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="inline-flex rounded-md shadow-sm">
+                <button class="filter-btn px-4 py-2 text-sm font-medium rounded-l-lg bg-primary-600 text-white" data-filter="all">All</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="upcoming">Upcoming</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="in_progress">In Progress</button>
+                <button class="filter-btn px-4 py-2 text-sm font-medium rounded-r-lg bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300" data-filter="completed">Completed</button>
+            </div>
+
+            <div class="relative w-full md:w-64">
+                <input type="text" id="wedding-search" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Search weddings...">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if weddings %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for wedding in weddings %}
+                <div class="wedding-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300" data-status="{{ wedding.status }}">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                        <span class="px-3 py-1 text-xs font-medium rounded-full
+                            {% if wedding.status == 'planning' %}bg-gray-200 text-gray-800
+                            {% elif wedding.status == 'upcoming' %}bg-blue-100 text-blue-800
+                            {% elif wedding.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                            {% elif wedding.status == 'completed' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ wedding.get_status_display }}
+                        </span>
+                        <div class="text-sm text-gray-600">
+                            <i class="fas fa-calendar-day mr-1"></i> {{ wedding.date|date:"F d, Y" }}
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-2">{{ wedding.title }}</h2>
+                        <div class="text-sm text-gray-600 mb-2">
+                            <i class="fas fa-heart text-primary-500 mr-2"></i> {{ wedding.bride_name }} & {{ wedding.groom_name }}
+                        </div>
+                        <div class="text-sm text-gray-600 mb-3">
+                            <i class="fas fa-map-marker-alt text-primary-500 mr-2"></i> {{ wedding.location }}
+                        </div>
+                        {% if wedding.description %}
+                            <p class="text-gray-700 text-sm mb-4">
+                                {{ wedding.description|truncatechars:100 }}
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between">
+                        <a href="{% url 'wedding_detail' wedding.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                            <i class="fas fa-eye mr-1"></i> View
+                        </a>
+                        {% if user.profile.role == 'admin' and wedding.admin == user %}
+                            <a href="{% url 'wedding_edit' wedding.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <i class="fas fa-heart-broken text-gray-400 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">No Weddings Found</h2>
+            <p class="text-gray-600 mb-6">
+                {% if user.profile.role == 'admin' %}
+                    You haven't created any weddings yet.
+                {% elif user.profile.role == 'team_member' %}
+                    You haven't been assigned to any weddings yet.
+                {% else %}
+                    You haven't been invited to any weddings yet.
+                {% endif %}
+            </p>
+            {% if user.profile.role == 'admin' %}
+                <a href="{% url 'wedding_create' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                    <i class="fas fa-plus mr-2"></i> Create Wedding
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wedding filtering
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const weddingCards = document.querySelectorAll('.wedding-card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active styles from all buttons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('bg-primary-600', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-700');
+                });
+
+                // Add active styles to clicked button
+                this.classList.remove('bg-white', 'text-gray-700');
+                this.classList.add('bg-primary-600', 'text-white');
+
+                const filter = this.getAttribute('data-filter');
+
+                weddingCards.forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-status') === filter) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Wedding search
+        const searchInput = document.getElementById('wedding-search');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+
+            weddingCards.forEach(card => {
+                const title = card.querySelector('.text-xl').textContent.toLowerCase();
+                const couple = card.querySelector('.text-sm:nth-of-type(1)').textContent.toLowerCase();
+                const location = card.querySelector('.text-sm:nth-of-type(2)').textContent.toLowerCase();
+
+                if (title.includes(searchTerm) || couple.includes(searchTerm) || location.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

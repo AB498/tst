@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Team Invitation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .wedding-details {
+            margin-bottom: 20px;
+        }
+        .wedding-details h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .credentials {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .credentials h3 {
+            color: #1565c0;
+            margin-top: 0;
+        }
+        .role-info {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .role-info h3 {
+            color: #2e7d32;
+            margin-top: 0;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin-top: 30px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Wedding Team Invitation</h1>
+        <p>{{ wedding.bride_name }} & {{ wedding.groom_name }}</p>
+    </div>
+    
+    <div class="content">
+        <p>Dear {{ user.first_name }} {{ user.last_name }},</p>
+        
+        <p>You have been invited to join the wedding team for {{ wedding.bride_name }} & {{ wedding.groom_name }}'s wedding as a <strong>{{ role }}</strong>.</p>
+        
+        <div class="wedding-details">
+            <h3>Wedding Details</h3>
+            <p><strong>Date:</strong> {{ wedding.date }}</p>
+            <p><strong>Time:</strong> {{ wedding.time }}</p>
+            <p><strong>Location:</strong> {{ wedding.location }}</p>
+            <p><strong>Address:</strong> {{ wedding.address }}</p>
+        </div>
+        
+        <div class="role-info">
+            <h3>Your Role: {{ role }}</h3>
+            <p>As a team member, you will have access to the wedding management system to help coordinate and manage various aspects of the wedding.</p>
+        </div>
+        
+        <div class="credentials">
+            <h3>Your Login Credentials</h3>
+            <p>To access the wedding management system, please use the following credentials:</p>
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Password:</strong> {{ password }}</p>
+            <p><strong>Important:</strong> Please change your password after your first login for security reasons.</p>
+            <div style="text-align: center;">
+                <a href="{{ login_url }}" class="button">Login to Wedding Management System</a>
+            </div>
+        </div>
+        
+        <p>If you have any questions or need assistance, please contact the wedding administrator.</p>
+        <p>Thank you for being part of this special occasion!</p>
+        <p>Best regards,<br>Wedding Management Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>This is an automated email. Please do not reply to this message.</p>
+        <p>&copy; {{ wedding.date.year }} Wedding Management System</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Wedding Management System{% endblock %}
+
+{% block content %}
+<div class="pb-12">
+    <!-- Dashboard Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-gray-900 mb-4 md:mb-0">Admin Dashboard</h1>
+        <a href="{% url 'wedding_create' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+            <i class="fas fa-plus mr-2"></i> New Wedding
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Weddings -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-primary-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 mr-4">
+                    <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600">
+                        <i class="fas fa-heart text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">{{ wedding_stats.total }}</div>
+                    <div class="text-sm text-gray-500">Total Weddings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Weddings -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-blue-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 mr-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                        <i class="fas fa-calendar-alt text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">{{ wedding_stats.upcoming }}</div>
+                    <div class="text-sm text-gray-500">Upcoming</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- In Progress Weddings -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-yellow-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 mr-4">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
+                        <i class="fas fa-spinner text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">{{ wedding_stats.in_progress }}</div>
+                    <div class="text-sm text-gray-500">In Progress</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Weddings -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-green-500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 mr-4">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-gray-900">{{ wedding_stats.completed }}</div>
+                    <div class="text-sm text-gray-500">Completed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Weddings Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-900">Your Weddings</h2>
+                <a href="{% url 'wedding_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">View All</a>
+            </div>
+
+            <div class="p-6">
+                {% if weddings %}
+                    <div class="space-y-4">
+                        {% for wedding in weddings %}
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                <div class="mb-3 md:mb-0">
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ wedding.title }}</h3>
+                                    <div class="text-sm text-gray-600 mt-1">
+                                        <span class="mr-3">{{ wedding.bride_name }} & {{ wedding.groom_name }}</span>
+                                        <span>{{ wedding.date|date:"F d, Y" }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="px-3 py-1 text-xs font-medium rounded-full
+                                        {% if wedding.status == 'planning' %}bg-gray-200 text-gray-800
+                                        {% elif wedding.status == 'upcoming' %}bg-blue-100 text-blue-800
+                                        {% elif wedding.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                        {% elif wedding.status == 'completed' %}bg-green-100 text-green-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ wedding.get_status_display }}
+                                    </span>
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'wedding_detail' wedding.id %}" class="p-1.5 text-gray-500 hover:text-primary-600 hover:bg-gray-200 rounded-full transition">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'wedding_edit' wedding.id %}" class="p-1.5 text-gray-500 hover:text-primary-600 hover:bg-gray-200 rounded-full transition">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-heart-broken text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 mb-4">You haven't created any weddings yet.</p>
+                        <a href="{% url 'wedding_create' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                            Create Wedding
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Upcoming Events Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Upcoming Events</h2>
+            </div>
+
+            <div class="p-6">
+                {% if upcoming_events %}
+                    <div class="space-y-4">
+                        {% for event in upcoming_events %}
+                            <div class="flex items-start p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                <div class="flex-shrink-0 mr-4">
+                                    <div class="w-14 h-14 bg-primary-100 rounded-lg flex flex-col items-center justify-center text-primary-600">
+                                        <div class="text-lg font-bold leading-none">{{ event.date|date:"d" }}</div>
+                                        <div class="text-xs uppercase">{{ event.date|date:"M" }}</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ event.name }}</h3>
+                                    <div class="text-sm text-gray-600 mt-1">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-clock text-gray-400 mr-1"></i>
+                                            <span>{{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}</span>
+                                        </div>
+                                        <div class="flex items-center mt-1">
+                                            <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i>
+                                            <span>{{ event.location }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-primary-600 mt-2">{{ event.wedding.title }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-calendar-times text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500">No upcoming events scheduled.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Tasks Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-900">Recent Tasks</h2>
+                <a href="{% url 'task_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">View All</a>
+            </div>
+
+            <div class="p-6">
+                {% if recent_tasks %}
+                    <div class="space-y-4">
+                        {% for task in recent_tasks %}
+                            <div class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                <div class="flex-shrink-0 mr-3">
+                                    <div class="w-3 h-3 rounded-full
+                                        {% if task.status == 'pending' %}bg-gray-400
+                                        {% elif task.status == 'in_progress' %}bg-blue-500
+                                        {% elif task.status == 'completed' %}bg-green-500
+                                        {% else %}bg-red-500{% endif %}">
+                                    </div>
+                                </div>
+                                <div class="flex-grow">
+                                    <h3 class="text-base font-medium text-gray-900">{{ task.title }}</h3>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        <span class="mr-3">{{ task.wedding.title }}</span>
+                                        <span>Due: {{ task.due_date|date:"M d, Y" }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="px-2.5 py-0.5 text-xs font-medium rounded-full
+                                        {% if task.priority == 'low' %}bg-gray-100 text-gray-800
+                                        {% elif task.priority == 'medium' %}bg-blue-100 text-blue-800
+                                        {% elif task.priority == 'high' %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                    <a href="{% url 'task_detail' task.id %}" class="p-1.5 text-gray-500 hover:text-primary-600 hover:bg-gray-200 rounded-full transition">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-tasks text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-500 mb-4">No tasks created yet.</p>
+                        <a href="{% url 'task_create' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                            Create Task
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Quick Actions</h2>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <a href="{% url 'wedding_create' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 mb-3">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">New Wedding</span>
+                    </a>
+
+                    <a href="{% url 'task_create' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-3">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">New Task</span>
+                    </a>
+
+                    <a href="{% url 'guest_create' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">Add Guest</span>
+                    </a>
+
+                    <a href="{% url 'send_invitation' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 mb-3">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">Send Invitations</span>
+                    </a>
+
+                    <a href="{% url 'gallery_upload' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-3">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">Upload Photos</span>
+                    </a>
+
+                    <a href="{% url 'checklist' %}" class="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-3">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">Checklists</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

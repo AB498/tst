@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if selected_guest %}{{ selected_guest.name }}{% else %}Guest{% endif %} Gallery - {{ wedding.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">
+                {% if selected_guest %}
+                    {{ selected_guest.name }}'s Photos
+                {% else %}
+                    Guest Gallery
+                {% endif %}
+            </h1>
+            <p class="text-gray-600">{{ wedding.title }} - {{ wedding.bride_name }} & {{ wedding.groom_name }}</p>
+        </div>
+        
+        <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+            <a href="{% url 'gallery_upload' %}?wedding={{ wedding.id }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                <i class="fas fa-upload mr-2"></i> Upload Media
+            </a>
+            <a href="{% url 'wedding_gallery' wedding.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-th mr-2"></i> All Media
+            </a>
+            <a href="{% url 'gallery_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Gallery
+            </a>
+        </div>
+    </div>
+    
+    {% if selected_guest %}
+        <!-- Media for a specific guest -->
+        {% if media_items %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for media in media_items %}
+                    <div class="media-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 flex flex-col h-full">
+                        <div class="relative bg-gray-200" style="height: 200px;">
+                            {% if media.is_photo %}
+                                <img src="{{ media.file.url }}" alt="{{ media.title }}" class="object-cover w-full h-full">
+                            {% else %}
+                                <div class="flex items-center justify-center h-full">
+                                    <i class="fas fa-play-circle text-gray-400 text-4xl"></i>
+                                </div>
+                            {% endif %}
+
+                            {% if media.is_private %}
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-800 text-white">
+                                        <i class="fas fa-lock mr-1"></i> Private
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="p-4 flex-grow">
+                            <h2 class="text-lg font-bold text-gray-900 truncate">{{ media.title }}</h2>
+                            <div class="flex justify-between items-center text-sm text-gray-500 mt-2">
+                                <div>
+                                    <i class="{% if media.is_photo %}fas fa-camera{% else %}fas fa-video{% endif %} mr-1"></i>
+                                    {{ media.get_media_type_display }}
+                                </div>
+                                <div>
+                                    <i class="fas fa-calendar-day mr-1"></i> {{ media.upload_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center mt-auto">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="fas fa-heart mr-1 {% if media.likes.count > 0 %}text-red-500{% endif %}"></i>
+                                <span>{{ media.likes.count }}</span>
+                                <i class="fas fa-comment ml-3 mr-1"></i>
+                                <span>{{ media.comments.count }}</span>
+                            </div>
+                            <a href="{% url 'media_detail' media.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                <i class="fas fa-eye mr-1"></i> View
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white rounded-xl shadow-md p-8 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                    <i class="fas fa-images text-gray-400 text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">No Media Found</h2>
+                <p class="text-gray-600 mb-6">
+                    There are no photos or videos for {{ selected_guest.name }} yet.
+                </p>
+                <a href="{% url 'gallery_upload' %}?wedding={{ wedding.id }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                    <i class="fas fa-upload mr-2"></i> Upload Media
+                </a>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- Guest selection and media grouped by guest -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Guest List Sidebar -->
+            <div class="md:col-span-1">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden sticky top-4">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-900">Guests</h2>
+                    </div>
+                    <div class="p-4">
+                        <ul class="space-y-2">
+                            {% for guest in guests %}
+                                <li>
+                                    <a href="{% url 'guest_gallery_detail' wedding.id guest.id %}" class="block px-4 py-2 rounded-lg hover:bg-gray-100 transition">
+                                        {{ guest.name }}
+                                    </a>
+                                </li>
+                            {% empty %}
+                                <li class="text-gray-500 text-center py-4">No guests found</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Media Content -->
+            <div class="md:col-span-3">
+                {% if media_by_guest %}
+                    {% for guest, media_list in media_by_guest.items %}
+                        <div class="mb-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-serif font-bold text-gray-900">
+                                    {% if guest %}
+                                        {{ guest.name }}
+                                    {% else %}
+                                        Unassigned Photos
+                                    {% endif %}
+                                </h2>
+                                {% if guest %}
+                                    <a href="{% url 'guest_gallery_detail' wedding.id guest.id %}" class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition">
+                                        <i class="fas fa-eye mr-1"></i> View All
+                                    </a>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {% for media in media_list|slice:":6" %}
+                                    <div class="media-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 flex flex-col h-full">
+                                        <div class="relative bg-gray-200" style="height: 200px;">
+                                            {% if media.is_photo %}
+                                                <img src="{{ media.file.url }}" alt="{{ media.title }}" class="object-cover w-full h-full">
+                                            {% else %}
+                                                <div class="flex items-center justify-center h-full">
+                                                    <i class="fas fa-play-circle text-gray-400 text-4xl"></i>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if media.is_private %}
+                                                <div class="absolute top-2 right-2">
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-800 text-white">
+                                                        <i class="fas fa-lock mr-1"></i> Private
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="p-4 flex-grow">
+                                            <h2 class="text-lg font-bold text-gray-900 truncate">{{ media.title }}</h2>
+                                            <div class="flex justify-between items-center text-sm text-gray-500 mt-2">
+                                                <div>
+                                                    <i class="{% if media.is_photo %}fas fa-camera{% else %}fas fa-video{% endif %} mr-1"></i>
+                                                    {{ media.get_media_type_display }}
+                                                </div>
+                                                <div>
+                                                    <i class="fas fa-calendar-day mr-1"></i> {{ media.upload_date|date:"M d, Y" }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center mt-auto">
+                                            <a href="{% url 'media_detail' media.id %}" class="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition">
+                                                <i class="fas fa-eye mr-1"></i> View
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if media_list|length > 6 and guest %}
+                                <div class="mt-4 text-center">
+                                    <a href="{% url 'guest_gallery_detail' wedding.id guest.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                                        <i class="fas fa-images mr-2"></i> View All {{ media_list|length }} Photos
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="bg-white rounded-xl shadow-md p-8 text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-images text-gray-400 text-2xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900 mb-2">No Media Found</h2>
+                        <p class="text-gray-600 mb-6">
+                            There are no photos or videos for this wedding yet.
+                        </p>
+                        <a href="{% url 'gallery_upload' %}?wedding={{ wedding.id }}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                            <i class="fas fa-upload mr-2"></i> Upload Media
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

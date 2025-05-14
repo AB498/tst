@@ -1,0 +1,13 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install -r requirements.txt"
+
+[deploy]
+startCommand = "python manage.py migrate && python manage.py collectstatic --noinput && python reset_db.py --yes && gunicorn wms_project.wsgi"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+
+[variables]
+RAILWAY = "true"
+DEBUG = "false"

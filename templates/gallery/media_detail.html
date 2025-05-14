@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ media.title }} - Media Detail{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">{{ media.title }}</h1>
+            <p class="text-gray-600">{{ media.wedding.title }}</p>
+        </div>
+
+        <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+            {% if user == media.uploaded_by or user.profile.role == 'admin' or user == media.wedding.admin %}
+                <a href="{% url 'media_delete' media.id %}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <i class="fas fa-trash mr-2"></i> Delete
+                </a>
+            {% endif %}
+            <a href="{% url 'gallery_list' %}{% if media.wedding %}?wedding={{ media.wedding.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Gallery
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Media Display -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-gray-900 flex items-center justify-center">
+                {% if media.is_photo %}
+                    <img src="{{ media.file.url }}" alt="{{ media.title }}" class="max-w-full max-h-[600px] object-contain">
+                {% else %}
+                    <video controls class="max-w-full max-h-[600px]">
+                        <source src="{{ media.file.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                {% endif %}
+            </div>
+
+            <div class="p-6">
+                <div class="flex flex-wrap gap-3 mb-4">
+                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                        {{ media.get_media_type_display }}
+                    </span>
+                    {% if media.category %}
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                            {{ media.category.name }}
+                        </span>
+                    {% endif %}
+                    {% if media.is_private %}
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-800 text-white">
+                            <i class="fas fa-lock mr-1"></i> Private
+                        </span>
+                    {% endif %}
+                    {% if media.is_featured %}
+                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                            <i class="fas fa-star mr-1"></i> Featured
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if media.description %}
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <p class="text-gray-700">{{ media.description }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <span class="font-medium text-gray-500">Uploaded By:</span>
+                        <span class="text-gray-900 ml-2">{{ media.uploaded_by.get_full_name|default:media.uploaded_by.username }}</span>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <span class="font-medium text-gray-500">Upload Date:</span>
+                        <span class="text-gray-900 ml-2">{{ media.upload_date|date:"F d, Y" }}</span>
+                    </div>
+                    {% if media.guest %}
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <span class="font-medium text-gray-500">Guest:</span>
+                        <span class="text-gray-900 ml-2">{{ media.guest.name }}</span>
+                    </div>
+                    {% endif %}
+                    {% if media.category %}
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <span class="font-medium text-gray-500">Category:</span>
+                        <span class="text-gray-900 ml-2">{{ media.category.name }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Like and Comment Buttons -->
+                <div class="flex items-center space-x-4 mt-6">
+                    <form method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="like">
+                        <button type="submit" class="flex items-center space-x-1 px-4 py-2 border {% if user_liked %}border-red-500 text-red-500 bg-red-50{% else %}border-gray-300 text-gray-700{% endif %} rounded-lg hover:bg-gray-50 transition">
+                            <i class="fas fa-heart {% if user_liked %}text-red-500{% endif %}"></i>
+                            <span>{{ media.likes.count }} Like{% if media.likes.count != 1 %}s{% endif %}</span>
+                        </button>
+                    </form>
+                    <button id="comment-button" class="flex items-center space-x-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                        <i class="fas fa-comment"></i>
+                        <span>{{ comments.count }} Comment{% if comments.count != 1 %}s{% endif %}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">Comments</h2>
+            </div>
+
+            <div class="p-6">
+                <!-- Comment Form -->
+                <form method="post" class="mb-6">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="comment">
+                    <div class="mb-4">
+                        <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Add a Comment</label>
+                        <textarea id="comment" name="comment" rows="3" class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            Post Comment
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Comments List -->
+                <div class="space-y-6">
+                    {% if comments %}
+                        {% for comment in comments %}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="font-medium text-gray-900">{{ comment.user.get_full_name|default:comment.user.username }}</div>
+                                    <div class="text-xs text-gray-500">{{ comment.created_at|date:"F d, Y" }}</div>
+                                </div>
+                                <p class="text-gray-700">{{ comment.comment }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-gray-500">No comments yet. Be the first to comment!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scroll to comments when comment button is clicked
+        const commentButton = document.getElementById('comment-button');
+        const commentForm = document.getElementById('comment');
+
+        if (commentButton && commentForm) {
+            commentButton.addEventListener('click', function() {
+                commentForm.scrollIntoView({ behavior: 'smooth' });
+                commentForm.focus();
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

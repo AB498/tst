@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Public Gallery - {{ wedding.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">Wedding Gallery</h1>
+            <p class="text-gray-600">{{ wedding.title }} - {{ wedding.bride_name }} & {{ wedding.groom_name }}</p>
+        </div>
+        
+        <div class="mt-4 md:mt-0">
+            <a href="{% url 'login' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition duration-150 ease-in-out">
+                <i class="fas fa-sign-in-alt mr-2"></i> Log in for full access
+            </a>
+        </div>
+    </div>
+
+    <!-- Public Notice Banner -->
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8 rounded-md">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-400"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-blue-700">
+                    You are viewing the public gallery. <a href="{% url 'login' %}" class="font-medium underline text-blue-700 hover:text-blue-600">Log in</a> to see more photos and interact with the gallery.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if media_items %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for media in media_items %}
+                <div class="media-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition duration-300 flex flex-col h-full">
+                    <div class="relative bg-gray-200" style="height: 200px;">
+                        {% if media.is_photo %}
+                            <img src="{{ media.file.url }}" alt="{{ media.title }}" class="object-cover w-full h-full">
+                        {% else %}
+                            <div class="flex items-center justify-center h-full">
+                                <i class="fas fa-play-circle text-gray-400 text-4xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-4 flex-grow">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">{{ media.title }}</h3>
+                        {% if media.description %}
+                            <p class="text-gray-600 text-sm mb-2">{{ media.description|truncatechars:100 }}</p>
+                        {% endif %}
+                        <div class="flex justify-between items-center text-xs text-gray-500 mt-2">
+                            <span>
+                                <i class="fas fa-calendar-alt mr-1"></i> {{ media.upload_date|date:"M d, Y" }}
+                            </span>
+                            {% if media.guest %}
+                                <span>
+                                    <i class="fas fa-user mr-1"></i> {{ media.guest.name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <i class="fas fa-images text-gray-400 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">No Public Media Found</h2>
+            <p class="text-gray-600 mb-6">
+                There are no public photos or videos available for this wedding.
+            </p>
+            <a href="{% url 'login' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                <i class="fas fa-sign-in-alt mr-2"></i> Log in for full access
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
